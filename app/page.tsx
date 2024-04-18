@@ -6,7 +6,7 @@ export default function Home() {
       <Image
         src='/Home.png'
         alt='Next.js Logo'
-        className='mb-10 mt-20'
+        className='mb-10 mt-20 rounded-xl'
         width={800}
         height={800}
         priority
