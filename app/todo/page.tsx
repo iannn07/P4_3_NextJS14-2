@@ -3,7 +3,7 @@ import CreateForm from "./components/CreateForm";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-export default function Page() {
+export default function ToDoPage() {
 	const todos = [
 		{
 			title: "Subscribe",
