@@ -16,6 +16,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { signInWithEmailAndPassword } from '../actions';
+import { useTransition } from 'react';
 
 const FormSchema = z.object({
   email: z.string().email(),
@@ -25,6 +26,8 @@ const FormSchema = z.object({
 });
 
 export default function SignInForm() {
+  const [isPending, startTransition] = useTransition();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -33,8 +36,9 @@ export default function SignInForm() {
     },
   });
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
+      startTransition(async () => {
       const result = await signInWithEmailAndPassword(data);
       const { error } = JSON.parse(result);
       if (error) {
@@ -47,14 +51,18 @@ export default function SignInForm() {
             </pre>
           ),
         });
+      } else {
+        toast({
+          title: 'You submitted the following values:',
+          description: (
+            <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
+              <code className='text-white'>
+                {JSON.stringify(data, null, 2)}
+              </code>
+            </pre>
+          ),
+        });
       }
-      toast({
-        title: 'You submitted the following values:',
-        description: (
-          <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
-            <code className='text-white'>{JSON.stringify(data, null, 2)}</code>
-          </pre>
-        ),
       });
     } catch (error) {
       console.log(error);
@@ -103,7 +111,9 @@ export default function SignInForm() {
         />
         <Button type='submit' className='w-full flex gap-2'>
           SignIn
-          <AiOutlineLoading3Quarters className={cn('animate-spin')} />
+          <AiOutlineLoading3Quarters
+            className={cn('animate-spin', { hidden: !isPending })}
+          />
         </Button>
       </form>
     </Form>

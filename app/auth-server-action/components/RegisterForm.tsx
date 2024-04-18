@@ -18,6 +18,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { signUpWithEmailAndPassword } from '../actions';
+import { useTransition } from 'react';
 
 const FormSchema = z
   .object({
@@ -35,6 +36,8 @@ const FormSchema = z
   });
 
 export default function RegisterForm() {
+  const [isPending, startTransition] = useTransition();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -44,29 +47,35 @@ export default function RegisterForm() {
     },
   });
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
-    const result = await signUpWithEmailAndPassword(data);
-    const { error } = JSON.parse(result);
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    try {
+      startTransition(async () => {
+        const result = await signUpWithEmailAndPassword(data);
+        const { error } = JSON.parse(result);
 
-    if (error) {
-      toast({
-        variant: 'destructive',
-        title: 'You submitted the following values:',
-        description: (
-          <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
-            <code className='text-white'>{error.message}</code>
-          </pre>
-        ),
+        if (error) {
+          toast({
+            variant: 'destructive',
+            title: 'You submitted the following values:',
+            description: (
+              <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
+                <code className='text-white'>{error.message}</code>
+              </pre>
+            ),
+          });
+        } else {
+          toast({
+            title: 'You submitted the following values:',
+            description: (
+              <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
+                <code className='text-white'>Registration Success!</code>
+              </pre>
+            ),
+          });
+        }
       });
-    } else {
-      toast({
-        title: 'You submitted the following values:',
-        description: (
-          <pre className='mt-2 w-[340px] rounded-md bg-slate-950 p-4'>
-            <code className='text-white'>Registration Success!</code>
-          </pre>
-        ),
-      });
+    } catch (error) {
+      console.log(error);
     }
   }
 
@@ -131,7 +140,9 @@ export default function RegisterForm() {
         />
         <Button type='submit' className='w-full flex gap-2'>
           Register
-          <AiOutlineLoading3Quarters className={cn('animate-spin')} />
+          <AiOutlineLoading3Quarters
+            className={cn('animate-spin', { hidden: !isPending })}
+          />
         </Button>
       </form>
     </Form>
